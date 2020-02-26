@@ -25,10 +25,10 @@ func doWork(url string) string {
 
 func main() {
 	var total int
-	works := make(chan struct{})
+	works := make(chan int, 5)
 	wg := new(sync.WaitGroup)
 	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
+	for i := 0; scanner.Scan(); i++ {
 		url := scanner.Text()
 		wg.Add(1)
 		go func() {
@@ -39,7 +39,7 @@ func main() {
 			}
 			wg.Done()
 		}()
-		works <- struct{}{}
+		works <- i
 	}
 	close(works)
 	wg.Wait()
