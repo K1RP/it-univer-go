@@ -25,21 +25,26 @@ func doWork(url string) string {
 
 func main() {
 	var total int
-	works := make(chan int, 5)
+	var goroutineCounter int64
+	mutex := new(sync.Mutex)
+	works := make(chan struct{}, 4)
 	wg := new(sync.WaitGroup)
 	scanner := bufio.NewScanner(os.Stdin)
-	for i := 0; scanner.Scan(); i++ {
+	for scanner.Scan() {
 		url := scanner.Text()
+		fmt.Println("Start. Active", atomic.AddInt64(&goroutineCounter, 1))
+		works <- struct{}{}
 		wg.Add(1)
 		go func() {
-			for range works {
-				count := strings.Count(doWork(url), "Go")
-				total += count
-				fmt.Println("Count for", url, ":", count)
-			}
+			count := strings.Count(doWork(url), "Go")
+			mutex.Lock()
+			total += count
+			mutex.Unlock()
+			fmt.Println("Count for", url, ":", count)
+			<-works
 			wg.Done()
+			fmt.Println("Stop. Active", atomic.AddInt64(&goroutineCounter, -1))
 		}()
-		works <- i
 	}
 	close(works)
 	wg.Wait()
