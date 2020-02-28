@@ -14,11 +14,15 @@ import (
 func doWork(url string) string {
 	res, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		l := log.New(os.Stderr, "", 0)
+		l.Println(err)
+		return ""
 	}
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		l := log.New(os.Stderr, "", 0)
+		l.Println(err)
+		return ""
 	}
 	return string(body)
 }
